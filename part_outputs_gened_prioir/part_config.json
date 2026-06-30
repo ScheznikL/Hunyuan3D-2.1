@@ -1,0 +1,134 @@
+{
+  "external_top": {
+    "part_id": 0,
+    "stress": 0.1,
+    "noise_scale": 0.9,
+    "token_indices": null,
+    "y_range": [
+      -3e-06,
+      0.08872699999999999
+    ],
+    "extents": [
+      0.059815999999999994,
+      0.088719,
+      0.061266
+    ],
+    "centroid": [
+      0.007349791590225369,
+      0.04214418632127398,
+      -0.0005661255595508935
+    ],
+    "meas_vec_6": [
+      0.059815999999999994,
+      0.088719,
+      0.061266,
+      0.007349791590225369,
+      0.04214418632127398,
+      -0.0005661255595508935
+    ],
+    "n_verts": 13627,
+    "n_faces": 6155,
+    "mesh_file": "part_0_external_top.obj",
+    "latent_file": "part_0_external_top_latent.pt",
+    "description": "Upper aesthetic shell \u2014 follow image reference"
+  },
+  "external_shell": {
+    "part_id": 1,
+    "stress": 0.25,
+    "noise_scale": 0.75,
+    "token_indices": null,
+    "y_range": [
+      0.08872699999999999,
+      0.195203
+    ],
+    "extents": [
+      0.078278,
+      0.10589500000000002,
+      0.06878400000000001
+    ],
+    "centroid": [
+      0.007339485497075937,
+      0.1265213063742682,
+      -0.0007577461988304248
+    ],
+    "meas_vec_6": [
+      0.078278,
+      0.10589500000000002,
+      0.06878400000000001,
+      0.007339485497075937,
+      0.1265213063742682,
+      -0.0007577461988304248
+    ],
+    "n_verts": 17100,
+    "n_faces": 10917,
+    "mesh_file": "part_1_external_shell.obj",
+    "latent_file": "part_1_external_shell_latent.pt",
+    "description": "Lower shell \u2014 some style freedom"
+  },
+  "internal_cavity": {
+    "part_id": 2,
+    "stress": 0.95,
+    "noise_scale": 0.050000000000000044,
+    "token_indices": null,
+    "y_range": [
+      0.195203,
+      0.283933
+    ],
+    "extents": [
+      0.088339,
+      0.08822300000000002,
+      0.075307
+    ],
+    "centroid": [
+      0.009382977056603872,
+      0.23439097750943427,
+      -0.0002333452075471753
+    ],
+    "meas_vec_6": [
+      0.088339,
+      0.08822300000000002,
+      0.075307,
+      0.009382977056603872,
+      0.23439097750943427,
+      -0.0002333452075471753
+    ],
+    "n_verts": 6625,
+    "n_faces": 2288,
+    "mesh_file": "part_2_internal_cavity.obj",
+    "latent_file": "part_2_internal_cavity_latent.pt",
+    "description": "MUST match stump measurements \u2014 almost frozen"
+  },
+  "connector": {
+    "part_id": 3,
+    "stress": 0.8,
+    "noise_scale": 0.19999999999999996,
+    "token_indices": null,
+    "y_range": [
+      0.283933,
+      0.354917
+    ],
+    "extents": [
+      0.047329,
+      0.070971,
+      0.078888
+    ],
+    "centroid": [
+      -0.02170159486262393,
+      0.3245362240286133,
+      -0.0012196452609332003
+    ],
+    "meas_vec_6": [
+      0.047329,
+      0.070971,
+      0.078888,
+      -0.02170159486262393,
+      0.3245362240286133,
+      -0.0012196452609332003
+    ],
+    "n_verts": 6151,
+    "n_faces": 2492,
+    "mesh_file": "part_3_connector.obj",
+    "latent_file": "part_3_connector_latent.pt",
+    "description": "Load-bearing attachment points"
+  }
+}

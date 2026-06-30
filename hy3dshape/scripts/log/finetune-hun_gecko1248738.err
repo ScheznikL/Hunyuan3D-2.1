@@ -1,0 +1,180 @@
+[rank: 0] Seed set to 0
+Begin to print configuration ...
+name: 'HunyuanDiT Multimodal Flow Matching; VAE: 4096 token length; TextEncoder: T5-XXL;
+  Optional Image Guide (DINO-v2 Large); ImageSize: 518 (if used)'
+training:
+  fast: true
+  config: configs/finetunung-flowmatching-with-text.yaml
+  seed: 0
+  num_nodes: 1
+  num_gpus: 2
+  update_every: 4
+  steps: 50000000
+  max_epochs: 5
+  base_lr: 1.0e-05
+  use_amp: true
+  amp_type: bf16
+  gradient_clip_val: 1.0
+  gradient_clip_algorithm: norm
+  every_n_train_steps: 500
+  log_every_n_steps: 50
+  val_check_interval: 100
+  limit_val_batches: 16
+  monitor: val/total_loss
+  output_dir: /dcs/large/u5745134/train_results/finetune_output_folder_1/dit_v2/
+  ckpt_path: ''
+  deepspeed: true
+  deepspeed2: false
+  scale_lr: false
+dataset:
+  target: hy3dshape.data.dit_astl.AlignedShapeTextLatentModule
+  params:
+    batch_size: 4
+    num_workers: 6
+    val_num_workers: 4
+    train_paths: /dcs/large/u5745134/dataset/preprocessed
+    cond_stage_key: text
+    multimodal: true
+    text_max_length: 512
+    image_size: 518
+    mean:
+    - 0.5
+    - 0.5
+    - 0.5
+    std:
+    - 0.5
+    - 0.5
+    - 0.5
+    pc_size: 81920
+    pc_sharpedge_size: 0
+    sharpedge_label: true
+    return_normal: true
+    padding: true
+model:
+  target: hy3dshape.models.diffusion.flow_matching_stit.Diffuser
+  params:
+    first_stage_key: surface
+    cond_stage_key: text
+    scale_by_std: false
+    z_scale_factor: 1.0039506158752403
+    torch_compile: false
+    lora_config:
+      rank: 16
+      target_modules:
+      - qkv
+      - mlp
+      - proj
+    ema_config:
+      ema_model: LitEma
+      ema_decay: 0.999
+      ema_inference: false
+    first_stage_config:
+      target: hy3dshape.models.autoencoders.ShapeVAE
+      from_pretrained: tencent/Hunyuan3D-2mini
+      subfolder: hunyuan3d-vae-v2-mini-withencoder
+    cond_stage_config:
+      target: hy3dshape.models.conditioner.MultiModalConditioner
+      params:
+        drop_ratio: 0.1
+        image_encoder:
+          type: DinoImageEncoder
+          kwargs:
+            version: facebook/dinov2-giant
+            image_size: 518
+            use_cls_token: true
+            config:
+              attention_probs_dropout_prob: 0.0
+              drop_path_rate: 0.0
+              hidden_act: gelu
+              hidden_dropout_prob: 0.0
+              hidden_size: 1536
+              image_size: 518
+              initializer_range: 0.02
+              layer_norm_eps: 1.0e-06
+              layerscale_value: 1.0
+              mlp_ratio: 4
+              model_type: dinov2
+              num_attention_heads: 24
+              num_channels: 3
+              num_hidden_layers: 40
+              patch_size: 14
+              qkv_bias: true
+              torch_dtype: float32
+              use_swiglu_ffn: true
+        text_encoder:
+          type: MT5TextEncoder
+          kwargs:
+            model_name: google/mt5-large
+            out_dim: 1536
+            max_length: 128
+    denoiser_cfg:
+      target: hy3dshape.models.denoisers.Hunyuan3DDiT
+      from_pretrained: tencent/Hunyuan3D-2mini
+      subfolder: hunyuan3d-dit-v2-mini
+    scheduler_cfg:
+      transport:
+        target: hy3dshape.models.diffusion.transport.create_transport
+        params:
+          path_type: Linear
+          prediction: velocity
+      sampler:
+        target: hy3dshape.models.diffusion.transport.Sampler
+        params: {}
+        ode_params:
+          sampling_method: euler
+          num_steps: 50
+    optimizer_cfg:
+      optimizer:
+        target: torch.optim.AdamW
+        params:
+          betas:
+          - 0.9
+          - 0.99
+          eps: 1.0e-06
+          weight_decay: 0.01
+      scheduler:
+        target: hy3dshape.utils.trainings.lr_scheduler.LambdaWarmUpCosineFactorScheduler
+        params:
+          warm_up_steps: 500
+          f_start: 1.0e-06
+          f_min: 0.001
+          f_max: 1.0
+    pipeline_cfg:
+      target: hy3dshape.pipelines.Hunyuan3DDiTFlowMatchingPipelineInAlighnedSpace
+    image_processor_cfg:
+      target: hy3dshape.preprocessors.ImageProcessorV2
+      params: {}
+
+Finish print ...
+2026-02-15 12:42:22,340 - hy3dgen.shapgen - INFO - Try to load model from local path: /dcs/large/u5745134/hy3dgen_models/tencent/Hunyuan3D-2mini/hunyuan3d-dit-v2-mini
+2026-02-15 12:42:22,348 - hy3dgen.shapgen - INFO - Loading model from /dcs/large/u5745134/hy3dgen_models/tencent/Hunyuan3D-2mini/hunyuan3d-dit-v2-mini/model.fp16.ckpt
+You are using the default legacy behaviour of the <class 'transformers.models.t5.tokenization_t5.T5Tokenizer'>. This is expected, and simply means that the `legacy` (previous) behavior will be used so nothing changes for you. If you want to use the new behaviour, set `legacy=False`. This should only be set if you understand what it means, and thoroughly read the reason why this was added as explained in https://github.com/huggingface/transformers/pull/24565
+You are using a model of type mt5 to instantiate a model of type t5. This is not supported for all configurations of models and can yield errors.
+2026-02-15 12:42:38,439 - hy3dgen.shapgen - INFO - Try to load model from local path: /dcs/large/u5745134/hy3dgen_models/tencent/Hunyuan3D-2mini/hunyuan3d-vae-v2-mini-withencoder
+2026-02-15 12:42:38,442 - hy3dgen.shapgen - INFO - Loading model from /dcs/large/u5745134/hy3dgen_models/tencent/Hunyuan3D-2mini/hunyuan3d-vae-v2-mini-withencoder/model.fp16.ckpt
+2026-02-15 12:42:40,701 - hy3dgen.shapgen - INFO - Try to load model from local path: /dcs/large/u5745134/hy3dgen_models/tencent/Hunyuan3D-2mini/hunyuan3d-vae-v2-mini-withencoder
+2026-02-15 12:42:40,703 - hy3dgen.shapgen - INFO - Loading model from /dcs/large/u5745134/hy3dgen_models/tencent/Hunyuan3D-2mini/hunyuan3d-vae-v2-mini-withencoder/model.fp16.ckpt
+++++ NOT USING LR SCALING ++++
+Setting learning rate to 1.00e-05
+****************************************************************************************************
+Using bf16 precision
+****************************************************************************************************
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+Traceback (most recent call last):
+  File "/dcs/pg24/u5745134/Desktop/dev/Hunyuan3D-2.1/hy3dshape/main_finetune.py", line 223, in <module>
+    trainer.fit(model, datamodule=data, ckpt_path=training_cfg.ckpt_path, weights_only=False)
+  File "/dcs/pg24/u5745134/.conda/envs/hunyuan3D_torch28/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 584, in fit
+    call._call_and_handle_interrupt(
+  File "/dcs/pg24/u5745134/.conda/envs/hunyuan3D_torch28/lib/python3.10/site-packages/pytorch_lightning/trainer/call.py", line 48, in _call_and_handle_interrupt
+    return trainer.strategy.launcher.launch(trainer_fn, *args, trainer=trainer, **kwargs)
+  File "/dcs/pg24/u5745134/.conda/envs/hunyuan3D_torch28/lib/python3.10/site-packages/pytorch_lightning/strategies/launchers/subprocess_script.py", line 105, in launch
+    return function(*args, **kwargs)
+  File "/dcs/pg24/u5745134/.conda/envs/hunyuan3D_torch28/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 624, in _fit_impl
+    ckpt_path = self._checkpoint_connector._select_ckpt_path(
+  File "/dcs/pg24/u5745134/.conda/envs/hunyuan3D_torch28/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/checkpoint_connector.py", line 108, in _select_ckpt_path
+    ckpt_path = self._parse_ckpt_path(
+  File "/dcs/pg24/u5745134/.conda/envs/hunyuan3D_torch28/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/checkpoint_connector.py", line 213, in _parse_ckpt_path
+    raise ValueError(
+ValueError: `.fit()` found no path for the best weights: ''. Please specify a path for a checkpoint `.fit(ckpt_path=PATH)`

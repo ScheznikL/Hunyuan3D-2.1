@@ -1,0 +1,172 @@
+name: "HunyuanDiT Multimodal Flow Matching; VAE: 4096 token length; TextEncoder: T5-XXL; Optional Image Guide (DINO-v2 Large); ImageSize: 518 (if used)"
+# Fine-tuning on multimodal data: Text primary cond, Image as training-time guide; Text-only at inference.
+# Supports Case A (Text+3D+Image) and Case B (Text+3D only) via dataset flags.
+# Training on 8 x H20 with 98G Memory (reduce batch_size if OOM).
+
+training:
+  max_epochs: 100 # ОНОВЛЕНО
+  #steps: 100_000 #  Reduced for fine-tuning (original: 10_0000_0000)
+  use_amp: true #Automatic Mixed Precision менше місця - ті самі дані
+  amp_type: "bf16"
+  base_lr: 5e-6 #1e-5 WE MADE LOWER 5e-6 ОНОВЛЕНО !!
+  gradient_clip_val: 1.0
+  update_every: 4 # WAS suggested 8 at first
+  gradient_clip_algorithm: "norm"
+  every_n_train_steps: 5000 #2000 ОНОВЛЕНО !!!
+  val_check_interval: 1000  # Must be < every_n_train_steps
+  #limit_val_batches: 16 # WAS - 16 we made 100 last time / ОНОВЛЕНО!!!
+
+dataset:
+  target: hy3dshape.data.dit_astl.AlignedShapeTextLatentModule  # Custom adaptation for multimodal: add text loading
+  params:
+    # Base setting
+    batch_size: 2  # Reduce to 2 if OOM WAS - 4
+    num_workers: 6
+    val_num_workers: 4
+# Global batch = 3 × 2 × 3 = 18
+# or: 4 × 2 × 2 = 16
+    # Data
+    # train_data_list: path/to/your_multimodal_data/preprocessed  # Custom dir with text+3D+optional image (e.g., JSON with fields)
+    # val_data_list: path/to/your_multimodal_data/preprocessed
+    train_paths: /dcs/large/u5745134/dataset/preprocessed
+    # Conditioning: Primary text, optional image guide
+    cond_stage_key: "text"  # Primary: text; image as auxiliary if multimodal=True
+    multimodal: true  # Flag: If true, load/use image as guide (Case A); else text+3D only (Case B)
+    text_max_length: 512  # For T5 truncation
+
+    # Image loading (if multimodal)
+    image_size: 518
+    mean: &mean [0.5, 0.5, 0.5]
+    std: &std [0.5, 0.5, 0.5]
+
+    # Point cloud sampling (for 3D)
+    pc_size: &pc_size 81920
+    pc_sharpedge_size: &pc_sharpedge_size 0
+    sharpedge_label: &sharpedge_label true
+    return_normal: true
+
+    # Augmentation
+    padding: true
+
+model:
+  target: hy3dshape.models.diffusion.flow_matching_stit.Diffuser
+  params:
+    first_stage_key: "surface"  # 3D latents
+    cond_stage_key: "text"  # Primary text
+    scale_by_std: false
+    z_scale_factor: &z_scale_factor 1.0039506158752403
+    torch_compile: false
+
+    # LoRA for efficient fine-tuning
+    lora_config:
+      rank: 16
+      target_modules: ["qkv", "mlp", "proj"]
+
+    # EMA for stability
+    ema_config:
+      ema_model: LitEma
+      ema_decay: 0.999
+      ema_inference: false
+
+    first_stage_config:
+      target: hy3dshape.models.autoencoders.ShapeVAE
+      from_pretrained: tencent/Hunyuan3D-2mini #tencent/Hunyuan3D-2.0  # Or 2.1; adapt for version TODO
+      subfolder: hunyuan3d-vae-v2-mini-withencoder
+
+    cond_stage_config:
+      target: hy3dshape.models.conditioner.MultiModalConditioner
+      params:
+        drop_ratio: 0.1  #  Classifier-Free Guidance
+        image_encoder:
+          type: DinoImageEncoder
+          kwargs:
+            version: 'facebook/dinov2-giant' #'facebook/dinov2-large'
+            image_size: 518
+            use_cls_token: true
+            config:
+              attention_probs_dropout_prob: 0.0
+              drop_path_rate: 0.0
+              hidden_act: gelu
+              hidden_dropout_prob: 0.0
+              hidden_size: 1536
+              image_size: 518
+              initializer_range: 0.02
+              layer_norm_eps: 1.e-6
+              layerscale_value: 1.0
+              mlp_ratio: 4
+              model_type: dinov2
+              num_attention_heads: 24
+              num_channels: 3
+              num_hidden_layers: 40
+              patch_size: 14
+              qkv_bias: true
+              torch_dtype: float32
+              use_swiglu_ffn: true
+        
+        text_encoder:
+          type: MT5TextEncoder
+          kwargs:
+            model_name: "google/mt5-large"
+            out_dim: 1536
+            max_length: 128
+
+    denoiser_cfg:
+      target: hy3dshape.models.denoisers.Hunyuan3DDiT
+      from_pretrained: tencent/Hunyuan3D-2mini #tencent/Hunyuan3D-2.1  # Or 2.0; version-specific blocks (e.g., adaLN updates in 2.1)
+      subfolder: hunyuan3d-dit-v2-mini
+
+    scheduler_cfg:
+      transport:
+        target: hy3dshape.models.diffusion.transport.create_transport
+        params:
+          path_type: Linear  # For OT-FM
+          prediction: velocity
+      sampler:
+        target: hy3dshape.models.diffusion.transport.Sampler
+        params: {}
+        ode_params:
+          sampling_method: euler  # For OT flow matching
+          num_steps: &num_steps 50
+
+    optimizer_cfg:
+      optimizer:
+        target: torch.optim.AdamW
+        params:
+          betas: [0.9, 0.99]
+          eps: 1.e-6
+          weight_decay: 1.e-2
+
+      scheduler:
+        target: hy3dshape.utils.trainings.lr_scheduler.LambdaWarmUpCosineFactorScheduler
+        params:
+          warm_up_steps: 500 # WAS 50
+          f_start: 1.e-6
+          f_min: 1.e-3
+          f_max: 1.0
+
+    pipeline_cfg:
+      target: hy3dshape.pipelines.Hunyuan3DDiTFlowMatchingPipelineInAlighnedSpace  
+
+    image_processor_cfg:  # If image guide used
+      target: hy3dshape.preprocessors.ImageProcessorV2
+      params: {}
+
+# callbacks:
+#   logger:
+#     target: hy3dshape.utils.trainings.mesh_log_callback.ImageConditionalASLDiffuserLogger  # Adapt for text cond visuals
+#     params:
+#       step_frequency: 1000
+#       num_samples: 1
+#       sample_times: 1
+#       mean: *mean
+#       std: *std
+#       bounds: [-1.01, -1.01, -1.01, 1.01, 1.01, 1.01]
+#       octree_depth: 8
+#       num_chunks: 50000
+#       mc_level: 0.0
+    
+  # file_loggers:
+  #   target: hy3dshape.utils.trainings.mesh_log_callback.ImageConditionalFixASLDiffuserLogger  # Adapt for text
+  #   params:
+  #     step_frequency: 500
+  #     test_data_path: "tools/mini_testset/texts.json"  # Change to text prompts for inference logging

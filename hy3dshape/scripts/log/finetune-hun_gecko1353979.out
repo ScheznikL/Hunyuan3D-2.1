@@ -1,0 +1,42 @@
+NCCL_SOCKET_IFNAME is not set. Auto-detected and exporting: eth0
+--- Script Arguments ---
+node_num: 1
+node_rank: 0
+master_ip: 0.0.0.0
+config: configs/finetunung-flowmatching-with-text.yaml
+output_dir: /dcs/large/u5745134/train_results/finetune_output_folder_1/dit_v3/
+checkpint: /dcs/large/u5745134/train_results/finetune_output_folder_1/dit_v3/ckpt/ckpt-step=00020000.ckpt
+----------------------
+DEBUG: Available keys in training_cfg: dict_keys(['fast', 'config', 'seed', 'num_nodes', 'num_gpus', 'update_every', 'steps', 'max_epochs', 'base_lr', 'use_amp', 'amp_type', 'gradient_clip_val', 'gradient_clip_algorithm', 'every_n_train_steps', 'log_every_n_steps', 'val_check_interval', 'limit_val_batches', 'monitor', 'output_dir', 'ckpt_path', 'deepspeed', 'deepspeed2', 'scale_lr'])
+{'type': 'MT5TextEncoder', 'kwargs': {'model_name': 'google/mt5-large', 'out_dim': 1536, 'max_length': 128}}
+Keeping EMAs of 66.
+PointCrossAttentionEncoder INFO: pc_sharpedge_size is zero
+PointCrossAttentionEncoder INFO: pc_sharpedge_size is zero
+Warning: The cache directory for DeepSpeed Triton autotune, /dcs/pg24/u5745134/.triton/autotune, appears to be on an NFS system. While this is generally acceptable, if you experience slowdowns or hanging when DeepSpeed exits, it is recommended to set the TRITON_CACHE_DIR environment variable to a non-NFS path.
+[INFO] Checkpoint is /dcs/large/u5745134/train_results/finetune_output_folder_1/dit_v3/ckpt/ckpt-step=00020000.ckpt
+Dataset Split (80/20): Total=7473, Train=5978, Val=1495
+Before initializing optimizer states
+MA 5.45 GB         Max_MA 5.46 GB         CA 5.53 GB         Max_CA 6 GB 
+CPU Virtual Memory:  used = 12.92 GB, percent = 2.6%
+After initializing optimizer states
+MA 5.45 GB         Max_MA 5.46 GB         CA 5.53 GB         Max_CA 6 GB 
+CPU Virtual Memory:  used = 12.92 GB, percent = 2.6%
+After initializing ZeRO optimizer
+MA 5.45 GB         Max_MA 5.45 GB         CA 5.53 GB         Max_CA 6 GB 
+CPU Virtual Memory:  used = 12.92 GB, percent = 2.6%
+┏━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┳━━━━━━━┓
+┃   ┃ Name              ┃ Type                  ┃ Params ┃ Mode  ┃ FLOPs ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━╇━━━━━━━┩
+│ 0 │ model             │ PeftModel             │  560 M │ train │     0 │
+│ 1 │ cond_stage_model  │ MultiModalConditioner │  1.7 B │ train │     0 │
+│ 2 │ model_ema         │ LitEma                │      0 │ train │     0 │
+│ 3 │ first_stage_model │ ShapeVAE              │  327 M │ eval  │     0 │
+└───┴───────────────────┴───────────────────────┴────────┴───────┴───────┘
+Trainable params: 3.2 M                                                         
+Non-trainable params: 2.6 B                                                     
+Total params: 2.6 B                                                             
+Total estimated model params size (MB): 10.4 K                                  
+Modules in train mode: 738                                                      
+Modules in eval mode: 1558                                                      
+Total FLOPs: 0                                                                  
+NCCL version 2.28.9+cuda13.0

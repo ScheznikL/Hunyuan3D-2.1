@@ -1,0 +1,14 @@
+NCCL_SOCKET_IFNAME is not set. Auto-detected and exporting: eth0
+--- Script Arguments ---
+node_num: 1
+node_rank: 0
+master_ip: 0.0.0.0
+config: configs/finetunung-flowmatching-with-text.yaml
+output_dir: /dcs/large/u5745134/train_results/finetune_output_folder_1/dit_v2/
+----------------------
+DEBUG: Available keys in training_cfg: dict_keys(['fast', 'config', 'seed', 'num_nodes', 'num_gpus', 'update_every', 'steps', 'max_epochs', 'base_lr', 'use_amp', 'amp_type', 'gradient_clip_val', 'gradient_clip_algorithm', 'every_n_train_steps', 'log_every_n_steps', 'val_check_interval', 'limit_val_batches', 'monitor', 'output_dir', 'ckpt_path', 'deepspeed', 'deepspeed2', 'scale_lr'])
+{'type': 'MT5TextEncoder', 'kwargs': {'model_name': 'google/mt5-large', 'out_dim': 1536, 'max_length': 128}}
+Keeping EMAs of 66.
+PointCrossAttentionEncoder INFO: pc_sharpedge_size is zero
+PointCrossAttentionEncoder INFO: pc_sharpedge_size is zero
+Warning: The cache directory for DeepSpeed Triton autotune, /dcs/pg24/u5745134/.triton/autotune, appears to be on an NFS system. While this is generally acceptable, if you experience slowdowns or hanging when DeepSpeed exits, it is recommended to set the TRITON_CACHE_DIR environment variable to a non-NFS path.
