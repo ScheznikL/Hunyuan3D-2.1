@@ -1,4 +1,4 @@
-TEST = True
+TEST = False
 USE_PRIOR_TR = False
 # Hunyuan 3D is licensed under the TENCENT HUNYUAN NON-COMMERCIAL LICENSE AGREEMENT
 # except for the third-party components listed below.

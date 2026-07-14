@@ -57,7 +57,6 @@ echo "========================================="
 for ((i=0; i<COUNT; i++))
 do
     PROMPT_T2I=$(jq -r ".[$i].prompt" "$JSON_INPUT")
-    PROMPT_T2I=${PROMPT_T2I//Ergonomic semi-cylindrical U-shaped open channel/}
 
     UUID=$(jq -r ".[$i].uuid" "$JSON_INPUT")
 
@@ -87,41 +86,3 @@ done
 
 wait
 echo "All images generated."
-
-# for ((i=0; i<COUNT; i++))
-# do
-#     PROMPT_T2I=$(jq -r ".[$i].prompt" "$JSON_INPUT")
-#     UUID=$(jq -r ".[$i].uuid" "$JSON_INPUT")
-
-#     OUT_IMAGE="${OUTPUT_DIR}/${UUID}.png"
-
-#     if [ ! -f "$OUT_IMAGE" ]; then
-#         GPU=$((i % 2))
-
-#         CUDA_VISIBLE_DEVICES=$GPU python inference.py \
-#             --input_image "$INITIAL_IMAGE" \
-#             --prompt "Edit the shape of cover to match $PROMPT_T2I" \
-#             --output_image "$OUT_IMAGE" \
-#             --seed "$SEED" \
-#             --num_inference_steps 30 \
-#             --optimized True &
-        
-#         if (( i % 2 == 1 )); then
-#             wait
-#         fi
-            
-#         # python /dcs/pg24/u5745134/Desktop/dev/Hunyuan3D-2.1/experiments/image_editor/FireRed-Image-Edit/inference.py \
-#         #     --input_image "$INITIAL_IMAGE" \
-#         #     --prompt "Edit the shape of cover to match $PROMPT_T2I" \
-#         #     --output_image "$OUT_IMAGE" \
-#         #     --seed "$SEED" \
-#         #     --num_inference_steps 30 \
-#         #     --optimized True
-
-#         echo "Image generated: $OUT_IMAGE"
-#         echo
-
-#     else
-#         echo "$OUT_IMAGE already exists"
-#     fi
-# done
