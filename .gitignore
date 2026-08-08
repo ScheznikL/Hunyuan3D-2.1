@@ -184,6 +184,7 @@ white_mesh_remesh.obj
 hy3dpaint/ckpt/
 experiments/*
 !experiments/hungred
+!experiments/pipe_utils.py
 logs/
 out/
 hy3dshape/scripts/log/
